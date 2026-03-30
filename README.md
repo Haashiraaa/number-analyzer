@@ -1,131 +1,149 @@
-# Number Analyzer
+# number-analyzer
 
-A Python-based interactive command-line application that performs various mathematical operations and checks on numbers.
+A CLI tool for basic number analysis. Accepts interactive input and runs three operations: even/odd detection, primality testing, and square root calculation.
 
-## Overview
+---
 
-Number Analyzer is a beginner-friendly tool that helps users explore fundamental mathematical properties of numbers. The application provides an intuitive menu-driven interface for performing three core operations: checking if numbers are even or odd, determining if numbers are prime, and calculating square roots with customizable precision.
+## Project Structure
 
-## Features
+```
+number-analyzer/
+├── number_analyzer/
+│   ├── __init__.py
+│   ├── main.py            # Entry point and menu loop
+│   ├── number_utils.py    # Core math logic
+│   ├── input_validator.py # Input parsing and operation controllers
+│   └── types.py           # Shared type aliases
+├── tests/
+│   ├── test_number_utils.py
+│   └── test_input_validator.py
+└── pytest.ini
+```
 
-### 1. Even/Odd Checker
-- Determines whether a given number is even or odd
-- Accepts both integers and floating-point numbers
-- Real-time validation and result display
-
-### 2. Prime Number Checker
-- Validates if a number is prime
-- Uses optimized algorithm checking divisibility up to the square root
-- Handles edge cases (numbers less than 2)
-
-### 3. Square Root Calculator
-- Calculates the exact square root of any positive number
-- Provides multiple output formats:
-  - Exact value (full precision)
-  - Rounded to specified decimal places (default: 3)
-  - Rounded to nearest integer
-- Customizable decimal precision
-
-## Technical Architecture
-
-### Core Components
-
-- **`main_launcher.py`**: Entry point and menu system
-- **`logic.py`**: Mathematical operation implementations
-- **`validator.py`**: Input validation and user interaction handling
-
-### Class Structure
-
-#### Logic Class
-Handles all mathematical computations:
-- `is_even_or_odd()`: Modulo-based even/odd detection
-- `is_prime()`: Prime number validation using trial division
-- `square_root()`: Square root calculation with multiple precision options
-
-#### Validate Class
-Manages user input and validation flows:
-- `parse_input()`: Generic input parser with error handling
-- `validate_even_odd()`: Even/odd checker workflow
-- `validate_prime()`: Prime checker workflow
-- `validate_square_root()`: Square root calculator workflow
+---
 
 ## Dependencies
 
-- **Python 3.10+** (uses modern type hints with union operator `|`)
-- **math** (standard library)
-- **haashi_pkg.utility.utils**: Custom utility package for screen management
+- Python 3.10+
+- [`haashi_pkg`](https://github.com/haashiraaa/haashi-analytics-toolkit) — used for logging (`Logger`) and screen utilities (`ScreenUtil`)
+
+No third-party packages beyond `haashi_pkg`. Standard library only (`math`, `sys`, `logging`).
+
+---
+
+## Installation
+
+Clone the repo and ensure `haashi_pkg` is installed in your environment.
+
+```bash
+git clone <repo-url>
+cd number-analyzer
+pip install haashi-analytics-toolkit
+```
+
+---
 
 ## Usage
 
-### Running the Application
-
 ```bash
-python main_launcher.py
+python -m number_analyzer.main
 ```
 
-### Menu Navigation
+Or directly:
 
-Upon launch, users are presented with four options:
+```bash
+python number_analyzer/main.py
+```
 
-1. Check if a number is even or odd
-2. Check if a number is prime
-3. Calculate the square root of a number
-4. Exit
-
-Enter the corresponding number (1-4) to select an operation.
-
-### Input Format
-
-- Enter any positive number when prompted
-- Type `q` to return to the main menu from any operation
-- Invalid inputs are caught and users are re-prompted
-
-### Example Workflow
+You will be presented with a menu:
 
 ```
 Choose an operation:
-1. Check if a number is even or odd.
-2. Check if a number is prime.
-3. Calculate the square root of a number.
+1. Even or Odd Checker
+2. Prime Checker
+3. Square Root Calculator
 4. Exit.
-
-Enter your choice (1-4): 1
-
-Enter a integer to check if it is even or odd (or 'q' to return to main-menu)
->>> 42
-
-42.0 is an even number.
 ```
+
+Enter a number (1-4) to select. From any operation, enter `q` to return to the menu. `Ctrl+C` exits cleanly at any point.
+
+---
+
+## Modules
+
+### `types.py`
+
+Shared type aliases used across the package:
+
+- `NumberLike = Union[int, float]`
+- `SquareRoot = Tuple[float, float, int, int]` — `(exact, rounded_to_sf, rounded_int, sf)`
+
+---
+
+### `number_utils.py`
+
+Stateless math operations. All methods are `@staticmethod`.
+
+| Method | Signature | Description |
+|---|---|---|
+| `is_even` | `(num: NumberLike) -> bool` | Returns `True` if `num % 2 == 0` |
+| `is_prime` | `(num: NumberLike) -> bool` | Trial division up to `sqrt(n)`. Returns `False` for values less than 2 |
+| `square_root` | `(num: NumberLike, sf: int = 2) -> SquareRoot` | Returns `(exact, rounded_to_sf, rounded_int, sf)` |
+
+---
+
+### `input_validator.py`
+
+Two classes handling input parsing and wiring operations to user prompts.
+
+**`InputHandler`**
+
+- `get_input(msg0, msg1, prompt, logger)` — Prints messages, reads stdin, delegates to `parse_input`
+- `parse_input(user_input, logger)` — Returns `int` if whole number, `float` otherwise, `None` on `q` or invalid input
+
+**`NumberController`**
+
+- `check_even(logger)` — Delegates to `NumberUtils.is_even`
+- `check_prime(logger)` — Delegates to `NumberUtils.is_prime`
+- `check_square_root(logger)` — Delegates to `NumberUtils.square_root`, formats multi-line output
+
+---
+
+### `main.py`
+
+Entry point. Contains:
+
+- `main_menu(logger)` — Prints the operation list
+- `main(logger)` — Runs the `while True` menu loop, dispatches to `NumberController` via `choice_map`, handles `KeyboardInterrupt` and unexpected exceptions (logs errors to JSON on crash)
+
+---
+
+## Tests
+
+```bash
+pytest
+```
+
+`pytest.ini` sets `pythonpath = .` and `testpaths = tests`.
+
+**`test_number_utils.py`** — covers `NumberUtils` with parametrized cases for valid inputs, edge cases, and invalid types (expects `TypeError`).
+
+**`test_input_validator.py`** — covers `InputHandler.parse_input` with valid inputs (`q`, integers, floats) and invalid inputs, using a mocked `Logger` and patched `ScreenUtil`.
+
+---
 
 ## Error Handling
 
-The application includes robust error handling:
-- **Invalid input types**: Non-numeric inputs are rejected with clear error messages
-- **Negative numbers**: Rejected as invalid (since even/odd and prime checks expect positive numbers)
-- **Keyboard interrupts**: Gracefully exits the program
-- **Out-of-range menu choices**: Users are notified and re-prompted
+| Scenario | Behaviour |
+|---|---|
+| Non-numeric input | Warning logged, falls back to main menu |
+| `q` entered | Returns `None`, loop continues |
+| Out-of-range menu choice | User notified, re-prompted |
+| `KeyboardInterrupt` | Clean exit with message |
+| Unhandled exception | Error logged to JSON, `sys.exit(1)` |
 
-## Design Patterns
-
-- **Separation of Concerns**: Logic separated from validation and UI
-- **Type Safety**: Type hints used throughout for better code documentation
-- **User-Friendly**: Auto-clearing prompts and timed screen management
-- **Continuous Operation**: Each feature runs in a loop until user chooses to exit
-
-## Future Enhancements
-
-Potential areas for expansion:
-- Add factorial calculation
-- Include GCD/LCM operations
-- Support for complex numbers
-- Export results to file
-- Batch processing mode
-
+---
 
 ## Author
 
 Haashiraaa
-
-## Contributing
-
-Contributions, issues, and feature requests are welcome!
