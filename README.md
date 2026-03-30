@@ -36,9 +36,9 @@ No third-party packages beyond `haashi_pkg`. Standard library only (`math`, `sys
 Clone the repo and ensure `haashi_pkg` is installed in your environment.
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/Haashiraaa/number-analyzer.git
 cd number-analyzer
-pip install haashi-analytics-toolkit
+pip install -r requirements.txt
 ```
 
 ---
