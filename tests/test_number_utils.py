@@ -5,10 +5,10 @@
 
 import pytest
 import math
-from typing import Type, Optional
-from unittest.mock import MagicMock, create_autospec
+from _pytest.fixtures import FixtureRequest
+from typing import Type, Optional, Tuple
 from number_analyzer.number_utils import NumberUtils
-from number_analyzer.types import NumberLike, SquareRoot
+from number_analyzer.types import NumberLike
 
 
 @pytest.mark.parametrize('value, expected, error', [
@@ -83,11 +83,6 @@ def test_is_prime(
         assert NumberUtils.is_prime(value) == expected
 
 
-@pytest.fixture
-def square_root(value: NumberLike, sf: int) -> SquareRoot:
-    return math.sqrt(value), round(value, sf), round(value)
-
-
 @pytest.mark.parametrize('value, error', [
     (2, None),
     (3, None),
@@ -102,7 +97,6 @@ def square_root(value: NumberLike, sf: int) -> SquareRoot:
 def test_square_root(
     value: NumberLike,
     error: Optional[Type[Exception]],
-    square_root: SquareRoot,
     sf: int = 2
 ) -> None:
 
@@ -112,5 +106,6 @@ def test_square_root(
 
     else:
         result = NumberUtils.square_root(value, sf)
-        expected_results = square_root(value, sf)
+        exact = math.sqrt(value)
+        expected_results = (exact, round(exact, sf), round(exact), sf)
         assert result == expected_results
